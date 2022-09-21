@@ -446,7 +446,8 @@ func (rs *Store) pruneStores() {
 
 			if err := store.(*iavl.Store).DeleteVersions(rs.pruneHeights...); err != nil {
 				if errCause := errors.Cause(err); errCause != nil && errCause != iavltree.ErrVersionDoesNotExist {
-					panic(err)
+					//panic(err)
+					fmt.Printf("error pruning store: %s (%s)", key.Name(), err.Error())
 				}
 			}
 		}
