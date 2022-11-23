@@ -90,6 +90,16 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 // non-blocking, so an external signal handler must be used.
 func (s *Server) Start(cfg config.Config) error {
 	s.mtx.Lock()
+	if cfg.Telemetry.Enabled {
+		m, err := telemetry.New(cfg.Telemetry)
+		if err != nil {
+			s.mtx.Unlock()
+			return err
+		}
+
+		s.metrics = m
+		s.registerMetrics()
+	}
 
 	tmCfg := tmrpcserver.DefaultConfig()
 	tmCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
@@ -127,13 +137,6 @@ func (s *Server) Close() error {
 
 func (s *Server) registerGRPCGatewayRoutes() {
 	s.Router.PathPrefix("/").Handler(s.GRPCGatewayRouter)
-}
-
-func (s *Server) SetTelemetry(m *telemetry.Metrics) {
-	s.mtx.Lock()
-	s.metrics = m
-	s.registerMetrics()
-	s.mtx.Unlock()
 }
 
 func (s *Server) registerMetrics() {
